@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>振って色が変わる</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background-color: blue;
+      transition: background-color 0.5s;
+    }
+    .center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2em;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="center">スマホを振ってみて！</div>
+  <script>
+    let lastShakeTime = 0;
+    let isRed = false;
+
+    window.addEventListener('devicemotion', function (event) {
+      const acc = event.accelerationIncludingGravity;
+      const accTotal = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z);
+
+      const now = Date.now();
+      if (accTotal > 20 && now - lastShakeTime > 1000) {
+        // 一定以上の加速度があったら「振った」とみなす
+        isRed = !isRed;
+        document.body.style.backgroundColor = isRed ? 'red' : 'blue';
+        lastShakeTime = now;
+      }
+    });
+  </script>
+</body>
+</html>
