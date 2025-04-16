@@ -1,43 +1,82 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>振って色が変わる</title>
+  <title>Shake Toggle Color</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
+    html, body {
       margin: 0;
-      height: 100vh;
+      padding: 0;
+      height: 100%;
       background-color: blue;
-      transition: background-color 0.5s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
-    .center {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 2em;
-      color: white;
+
+    #enable-motion {
+      font-size: 1.5rem;
+      padding: 1em 2em;
+      border: none;
+      border-radius: 10px;
+      background-color: #fff;
+      color: #333;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
   </style>
 </head>
 <body>
-  <div class="center">スマホを振ってみて！</div>
+  <button id="enable-motion">Enable Motion</button>
+
   <script>
-    let lastShakeTime = 0;
-    let isRed = false;
+    const button = document.getElementById('enable-motion');
 
-    window.addEventListener('devicemotion', function (event) {
-      const acc = event.accelerationIncludingGravity;
-      const accTotal = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z);
-
-      const now = Date.now();
-      if (accTotal > 20 && now - lastShakeTime > 1000) {
-        // 一定以上の加速度があったら「振った」とみなす
-        isRed = !isRed;
-        document.body.style.backgroundColor = isRed ? 'red' : 'blue';
-        lastShakeTime = now;
+    button.addEventListener('click', async () => {
+      // iOSの場合、センサー使用の許可が必要
+      if (
+        typeof DeviceMotionEvent !== 'undefined' &&
+        typeof DeviceMotionEvent.requestPermission === 'function'
+      ) {
+        try {
+          const response = await DeviceMotionEvent.requestPermission();
+          if (response === 'granted') {
+            startMotionListener();
+            button.remove(); // ボタン非表示
+          } else {
+            alert('Motion permission denied.');
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Motion permission error.');
+        }
+      } else {
+        // Androidやデスクトップなど
+        startMotionListener();
+        button.remove();
       }
     });
+
+    function startMotionListener() {
+      let isRed = false;
+      let lastShakeTime = 0;
+
+      window.addEventListener('devicemotion', (event) => {
+        const acc = event.accelerationIncludingGravity;
+        if (!acc) return;
+
+        const accTotal = Math.sqrt(
+          (acc.x || 0) ** 2 + (acc.y || 0) ** 2 + (acc.z || 0) ** 2
+        );
+
+        const now = Date.now();
+        if (accTotal > 15 && now - lastShakeTime > 1000) {
+          isRed = !isRed;
+          document.body.style.backgroundColor = isRed ? 'red' : 'blue';
+          lastShakeTime = now;
+        }
+      });
+    }
   </script>
 </body>
 </html>
