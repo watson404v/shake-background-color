@@ -24,16 +24,36 @@
       color: #333;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
+
+    #debug {
+      position: absolute;
+      top: 1em;
+      left: 1em;
+      background: rgba(255,255,255,0.8);
+      padding: 1em;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
   </style>
 </head>
 <body>
   <button id="enable-motion">Enable Motion</button>
 
+  <div id="debug">
+    <div>X: <span id="x">-</span></div>
+    <div>Y: <span id="y">-</span></div>
+    <div>Z: <span id="z">-</span></div>
+    <div>Total: <span id="total">-</span></div>
+  </div>
+
   <script>
     const button = document.getElementById('enable-motion');
+    const xElem = document.getElementById('x');
+    const yElem = document.getElementById('y');
+    const zElem = document.getElementById('z');
+    const totalElem = document.getElementById('total');
 
     button.addEventListener('click', async () => {
-      // iOSの場合、センサー使用の許可が必要
       if (
         typeof DeviceMotionEvent !== 'undefined' &&
         typeof DeviceMotionEvent.requestPermission === 'function'
@@ -42,7 +62,7 @@
           const response = await DeviceMotionEvent.requestPermission();
           if (response === 'granted') {
             startMotionListener();
-            button.remove(); // ボタン非表示
+            button.remove();
           } else {
             alert('Motion permission denied.');
           }
@@ -51,7 +71,6 @@
           alert('Motion permission error.');
         }
       } else {
-        // Androidやデスクトップなど
         startMotionListener();
         button.remove();
       }
@@ -65,9 +84,16 @@
         const acc = event.accelerationIncludingGravity;
         if (!acc) return;
 
-        const accTotal = Math.sqrt(
-          (acc.x || 0) ** 2 + (acc.y || 0) ** 2 + (acc.z || 0) ** 2
-        );
+        const x = acc.x || 0;
+        const y = acc.y || 0;
+        const z = acc.z || 0;
+        const accTotal = Math.sqrt(x ** 2 + y ** 2 + z ** 2);
+
+        // デバッグ表示
+        xElem.textContent = x.toFixed(2);
+        yElem.textContent = y.toFixed(2);
+        zElem.textContent = z.toFixed(2);
+        totalElem.textContent = accTotal.toFixed(2);
 
         const now = Date.now();
         if (accTotal > 15 && now - lastShakeTime > 1000) {
